@@ -50,6 +50,7 @@ function startSession(content, msg) {
     if (currentState === StateEnum.SLEEP) {
         sessionName = content[0]
         msg.reply("Session: " + sessionName + " has been started");
+        currentState = StateEnum.SESSION;
     } else {
         msg.reply("The session: " + sessionName + " is still active! End the session before you start a new one.");
     }
@@ -65,8 +66,8 @@ function endSession(msg) {
 }
 
 function returnCurrentSession(msg){
-    if (currentState !== SLEEP) {
-        msg.reply('Currently discussing: ' + currentSession);
+    if (currentState !== StateEnum.SLEEP) {
+        msg.reply('Currently discussing: ' + sessionName);
     } else {
         msg.reply('Currently no active session');
     }
