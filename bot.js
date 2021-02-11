@@ -1,16 +1,16 @@
-import { Client } from 'discord.js';
-
 const ActionEnum= Object.freeze({"BUY":1, "SELL":2});
 
 const StateEnum =Object.freeze({"SLEEP":1, "SESSION":2,"VOTE":3});
 
-const client = new Client();
-client.login('ODA2OTc4NDczMTIxMTUzMDI1.YBxTRA.nbBLlwq9v7VqTtzYOz3CoKGLQXw');
+const Discord = require('discord.js');
+const fs = require('fs');
+const client = new Discord.Client();
+client.login(getToken());
 
 client.on('ready', readyDiscord);
 
 var sessionName = "";
-var currentState = State.SLEEP;
+var currentState = StateEnum.SLEEP;
 var currentVote = null;
 
 function readyDiscord(){
@@ -141,3 +141,8 @@ class voteObj {
 
 }
 
+function getToken(){
+    const data = fs.readFileSync('token.txt', 'UTF-8');
+    const token = data.split(/\r?\n/)[0];
+    return token;
+}
