@@ -2,6 +2,28 @@ const ActionEnum= Object.freeze({"BUY":1, "SELL":2});
 
 const StateEnum =Object.freeze({"SLEEP":1, "SESSION":2,"VOTE":3});
 
+class voteObj {
+    ledger = {};
+    constructor(gname, gbuyOrSell, gamount) {
+        this.name = gname;
+        this.amount = gamount;
+        this.buyOrSell = gbuyOrSell;
+    }
+
+    voteString(){
+        return "Voting to " + this.buyOrSellString() + " $" + this.amount + " of " + this.name;
+    }
+
+    buyOrSellString(){
+        if (this.buyOrSell === 1) {
+            return "buy";
+        } else {
+            return "sell";
+        }
+    }
+
+}
+
 const Discord = require('discord.js');
 const fs = require('fs');
 const client = new Discord.Client();
@@ -9,7 +31,7 @@ client.login(getToken());
 
 client.on('ready', readyDiscord);
 
-var sessionName = "";
+var sessionName = null;
 var currentState = StateEnum.SLEEP;
 var currentVote = null;
 
@@ -35,7 +57,7 @@ client.on('message', msg => {
                 startVote(commandContent, msg);
                 break;
             case "count":
-                getStateOfVote();
+                getStateOfVote(msg);
                 break;
 
         }
@@ -93,8 +115,8 @@ function startVote(content, msg) {
                 action = ActionEnum.SELL
             }
             currentVote = new voteObj(content[1], action, content[3])
-            msg.reply("Voting to " + content[2] + " $" + content[3] + " of " + content[1])
-            currentSession = StateEnum.VOTE;
+            msg.reply(currentVote.voteString());
+            currentState = StateEnum.VOTE;
         } catch (e) {
             msg.reply("Something is wrong with the statement")
             console.log(e)
@@ -117,29 +139,36 @@ function castVote(vote, msg) {
     }
 }
 
-function getStateOfVote() {
-    console.log(currentVote.ledger)
-    console.log(sumDictionary(currentVote.ledger))
-}
-
-function sumDictionary( obj ) {
-    var sum = 0;
-    for( var el in obj ) {
-        if( obj.hasOwnProperty( el ) ) {
-            sum += parseFloat( obj[el] );
+function getStateOfVote(msg) {
+    resultCounts = {};
+    for(var key in currentVote.ledger) {
+        answer = currentVote.ledger[key]
+        if (isNaN(resultCounts[answer])){
+            resultCounts[answer] = 1;
+        } else {
+            resultCounts[answer] += 1;
         }
     }
-    return sum;
+    if (!isNaN(resultCounts[true]) || !isNaN(resultCounts[false])) {
+        fors = resultCounts[true];
+        againsts = resultCounts[false];
+        if(isNaN(fors)) {
+            fors = 0;
+        } else if (isNaN(againsts)) {
+            againsts = 0;
+        }
+        total = fors + againsts;
+    }
+    lis = [fors, againsts]
+    printVoteResult(msg, lis, total)
 }
 
-class voteObj {
-    ledger = {};
-    constructor(gname, gbuyOrSell, gamount) {
-        this.name = gname;
-        this.amount = gamount;
-        this.buyOrSell = gbuyOrSell;
+function printVoteResult( msg, votes, total ) {
+    responseString ="\nCurrent Session: " + sessionName + "\nCurrent Vote: " + currentVote.voteString();
+    if (votes.length === 2) {
+        responseString += "\nFor: " + votes[0] + "\nAgainst: " + votes[1] + "\nTotal: " + total;
     }
-
+    msg.reply(responseString);
 }
 
 function getToken(){
